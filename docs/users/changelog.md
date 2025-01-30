@@ -3,6 +3,17 @@
 This log documents all Python API or CLI breaking backwards incompatible changes.
 Note that there is currently no guarantee for a stable Markdown formatting style across versions.
 
+## 0.7.22
+
+- Performance
+  - Improved import time and performance of CLI invocations that do not format Markdown.
+- Fixed
+  - No longer mutate cached TOML options or `_conf.DEFAULT_OPTS`.
+    This should avoid some hard to debug issues in plugins' tests.
+- Added
+  - `cache_toml` keyword argument to `_cli.run` for disabling TOML caching.
+    This is useful in tests written for plugins.
+
 ## 0.7.21
 
 - Fixed
