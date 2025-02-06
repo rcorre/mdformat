@@ -303,6 +303,16 @@ def make_arg_parser(
             plugin.add_cli_argument_group(group)
             for action in group._group_actions:
                 action.dest = f"plugin.{plugin_id}.{action.dest}"
+                if action.default not in {None, argparse.SUPPRESS}:
+                    import warnings
+
+                    plugin_file, plugin_line = get_source_file_and_line(plugin)
+                    warnings.warn_explicit(
+                        f"The `default` ({action.default!r}) for {action.option_strings!r} from the {plugin_id!r} plugin, will always override any value configured in TOML. The only supported CLI defaults are `None` or `argparse.SUPPRESS`. To resolve, consider refactoring to `.add_argument(..., default=None)` ",  # noqa: E501
+                        DeprecationWarning,
+                        filename=plugin_file,
+                        lineno=plugin_line,
+                    )
     return parser
 
 

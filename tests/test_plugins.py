@@ -272,6 +272,35 @@ dont_override_toml = 'dont override this with None if CLI opt not given'
     )
 
 
+def test_plugin_argument_warnings(monkeypatch, tmp_path):
+    """Test for warnings of plugin arguments that conflict with TOML."""
+
+    class ExamplePluginWithStoreTrue:
+        @staticmethod
+        def update_mdit(mdit: MarkdownIt):
+            pass
+
+        @staticmethod
+        def add_cli_argument_group(group: argparse._ArgumentGroup) -> None:
+            group.add_argument("--store-true", action="store_true")
+            group.add_argument("--store-false", action="store_false")
+            group.add_argument("--store-zero", default=0)
+            group.add_argument("--store-const", action="store_const", const=True)
+
+    monkeypatch.setitem(PARSER_EXTENSIONS, "table", ExamplePluginWithStoreTrue)
+    file_path = tmp_path / "test_markdown.md"
+    file_path.touch()
+
+    with patch.object(MDRenderer, "render", return_value=""):
+        with pytest.warns(DeprecationWarning) as warnings:
+            assert run([str(file_path)]) == 0
+
+    assert "--store-true" in str(warnings.pop().message)
+    assert "--store-false" in str(warnings.pop().message)
+    assert "--store-zero" in str(warnings.pop().message)
+    assert len(warnings) == 0
+
+
 def test_cli_options_group__no_toml(monkeypatch, tmp_path):
     """Test add_cli_argument_group plugin API with configuration only from
     CLI."""
